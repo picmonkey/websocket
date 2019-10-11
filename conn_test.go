@@ -7,7 +7,6 @@ package websocket
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,6 +16,7 @@ import (
 	"testing"
 	"testing/iotest"
 	"time"
+	"github.com/go-errors/errors"
 )
 
 var _ net.Error = errWriteTimeout
@@ -402,11 +402,11 @@ func TestEOFWithinFrame(t *testing.T) {
 			t.Fatalf("%d: NextReader() returned %d, %v", n, op, err)
 		}
 		_, err = io.Copy(ioutil.Discard, r)
-		if err != errUnexpectedEOF {
+		if !errors.Is(err, errUnexpectedEOF) {
 			t.Fatalf("%d: io.Copy() returned %v, want %v", n, err, errUnexpectedEOF)
 		}
 		_, _, err = rc.NextReader()
-		if err != errUnexpectedEOF {
+		if !errors.Is(err, errUnexpectedEOF) {
 			t.Fatalf("%d: NextReader() returned %v, want %v", n, err, errUnexpectedEOF)
 		}
 	}
@@ -427,11 +427,11 @@ func TestEOFBeforeFinalFrame(t *testing.T) {
 		t.Fatalf("NextReader() returned %d, %v", op, err)
 	}
 	_, err = io.Copy(ioutil.Discard, r)
-	if err != errUnexpectedEOF {
+	if !errors.Is(err, errUnexpectedEOF) {
 		t.Fatalf("io.Copy() returned %v, want %v", err, errUnexpectedEOF)
 	}
 	_, _, err = rc.NextReader()
-	if err != errUnexpectedEOF {
+	if !errors.Is(err, errUnexpectedEOF) {
 		t.Fatalf("NextReader() returned %v, want %v", err, errUnexpectedEOF)
 	}
 }

@@ -7,7 +7,6 @@ package websocket
 import (
 	"bufio"
 	"encoding/binary"
-	"errors"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -16,6 +15,7 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
+	"github.com/go-errors/errors"
 )
 
 const (
@@ -148,7 +148,7 @@ func (e *CloseError) Error() string {
 // IsCloseError returns boolean indicating whether the error is a *CloseError
 // with one of the specified codes.
 func IsCloseError(err error, codes ...int) bool {
-	if e, ok := err.(*CloseError); ok {
+	if e, ok := errors.Unwrap(err).(*CloseError); ok {
 		for _, code := range codes {
 			if e.Code == code {
 				return true
@@ -161,7 +161,7 @@ func IsCloseError(err error, codes ...int) bool {
 // IsUnexpectedCloseError returns boolean indicating whether the error is a
 // *CloseError with a code not in the list of expected codes.
 func IsUnexpectedCloseError(err error, expectedCodes ...int) bool {
-	if e, ok := err.(*CloseError); ok {
+	if e, ok := errors.Unwrap(err).(*CloseError); ok {
 		for _, code := range expectedCodes {
 			if e.Code == code {
 				return false
@@ -186,7 +186,7 @@ func newMaskKey() [4]byte {
 }
 
 func hideTempErr(err error) error {
-	if e, ok := err.(net.Error); ok && e.Temporary() {
+	if e, ok := errors.Unwrap(err).(net.Error); ok && e.Temporary() {
 		err = &netError{msg: e.Error(), timeout: e.Timeout()}
 	}
 	return err
@@ -369,7 +369,7 @@ func (c *Conn) writeFatal(err error) error {
 func (c *Conn) read(n int) ([]byte, error) {
 	p, err := c.br.Peek(n)
 	if err == io.EOF {
-		err = errUnexpectedEOF
+		err = errors.WrapPrefix(errUnexpectedEOF, "conn.read", 0)
 	}
 	c.br.Discard(len(p))
 	return p, err
@@ -721,7 +721,10 @@ func (w *messageWriter) Close() error {
 	if w.err != nil {
 		return w.err
 	}
-	return w.flushFrame(true, nil)
+	if err := w.flushFrame(true, nil); err != nil {
+		return err
+	}
+	return nil
 }
 
 // WritePreparedMessage writes prepared message into connection.
@@ -1027,7 +1030,7 @@ func (r *messageReader) Read(b []byte) (int, error) {
 			rem -= int64(n)
 			c.setReadRemaining(rem)
 			if c.readRemaining > 0 && c.readErr == io.EOF {
-				c.readErr = errUnexpectedEOF
+				c.readErr = errors.WrapPrefix(errUnexpectedEOF, "messageReader.Read short", 0)
 			}
 			return n, c.readErr
 		}
@@ -1048,7 +1051,7 @@ func (r *messageReader) Read(b []byte) (int, error) {
 
 	err := c.readErr
 	if err == io.EOF && c.messageReader == r {
-		err = errUnexpectedEOF
+		err = errors.WrapPrefix(errUnexpectedEOF, "messageReader.Read end", 0)
 	}
 	return 0, err
 }
@@ -1132,7 +1135,7 @@ func (c *Conn) SetPingHandler(h func(appData string) error) {
 			err := c.WriteControl(PongMessage, []byte(message), time.Now().Add(writeWait))
 			if err == ErrCloseSent {
 				return nil
-			} else if e, ok := err.(net.Error); ok && e.Temporary() {
+			} else if e, ok := errors.Unwrap(err).(net.Error); ok && e.Temporary() {
 				return nil
 			}
 			return err

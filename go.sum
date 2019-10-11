@@ -1,2 +1,6 @@
+github.com/go-errors/errors v1.0.1 h1:LUHzmkK3GUKUrL/1gfBUxAHzcev3apQlezX/+O7ma6w=
+github.com/go-errors/errors v1.0.1/go.mod h1:f4zRHt4oKfwPJE5k8C9vpYG+aDHdBFUsgrm6/TyX73Q=
 github.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=
 github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
+github.com/picmonkey/errors v0.0.0-20160713235446-0cb7841af761 h1:4+cHFHkB0Va6WDerCxYM0ygTaVSJCnmLoEaWkIzDvEY=
+github.com/picmonkey/errors v0.0.0-20160713235446-0cb7841af761/go.mod h1:ghX664bvaQYitkpEphfq4cTgWXt/AKNojh1y+LIT/as=
